@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataTables with API Data</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+  <!-- Include Bootstrap CSS (for styles) -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Include Bootstrap JS (for modal functionality) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+  <style>
+    /* Highlight the row on hover */
+    #example tbody tr:hover {
+      background-color: #f0f8ff;  /* Light blue background */
+      cursor: pointer;            /* Changes the cursor to a pointer */
+    }
+    /* Style for the child row */
+    tr.details td.dt-control {
+      background: url('https://cdn.datatables.net/1.11.5/images/details_open.png') no-repeat center center;
+      cursor: pointer;
+    }
+    tr.details td.dt-control::before {
+      content: "";
+    }
+
+
+
+    .rounded-btn {
+        border-radius: 20px; /* Adjust the value as needed */
+        margin-right: 10px;
+    }
+  </style>
+
+
+
+
+
+<script>
+  // Function to check if the serial number is duplicate
+  async function checkDuplicateSerialNumber() {
+      const serialInput = document.getElementById('serial_number');
+      const serialError = document.getElementById('serial-error');
+      const serialValue = serialInput.value.trim();
+
+      if (!serialValue) {
+          serialError.textContent = 'Serial number cannot be empty.';
+          serialError.style.color = 'red';
+          return;
+      }
+
+      try {
+          // Call the backend API to check for duplicates
+          const response = await fetch(`/check-duplicate/${serialValue}`);
+          const result = await response.json();
+
+          if (response.status === 200) {
+              // No duplicate found
+              serialError.textContent = '';
+          } else {
+              // Duplicate found
+              serialError.textContent = result.detail || 'Duplicate serial number found.';
+              serialError.style.color = 'red';
+          }
+      } catch (error) {
+          // Handle network or API error
+          serialError.textContent = 'Error checking duplicate serial number.';
+          serialError.style.color = 'red';
+      }
+  }
+</script>
+
+</head>
+<body>
+
+
+  <div class="container my-5">
+
+    <!-- Table Structure -->
+    <div class="table-responsive">
+      <button class="btn btn-primary rounded-btn" onclick="openModal()">New Item</button>
+      <table id="example" class="table table-striped table-bordered table-sm">
+        <thead>
+          <tr style="background-color: #007bff; color: white;">
+            <th></th>
+            <th>ID</th>
+            <th>Serial Number</th>
+            <th>Location</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>MAC Address</th>
+            <th>Remarks</th>
+            <th>Status</th>
+            <th>Switch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically populated here -->
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+
+
+
+<!-- Modal Structure +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="itemModalLabel">Modify Item</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Form to modify item -->
+        <form id="itemForm">
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">ID</span>
+            <input type="text" id="id" name="id" class="form-control" placeholder="ID" readonly>
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Serial Number</span>
+            <input type="text" id="serial_number" name="serial_number" class="form-control" placeholder="Serial Number" oninput="checkDuplicateSerialNumber()">
+            <div id="serial-error"></div>
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Location</span>
+            <input type="text" id="location" name="location" class="form-control" placeholder="Location" required oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Brand</span>
+            <input type="text" id="brand" name="brand" class="form-control" placeholder="Brand" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Model</span>
+            <input type="text" id="model" name="model" class="form-control" placeholder="Model" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Description</span>
+            <input type="text" id="description" name="description" class="form-control" placeholder="Description" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Type</span>
+            <input type="text" id="type" name="type" class="form-control" placeholder="Type" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">MAC Address</span>
+            <input type="text" id="macadd" name="macadd" class="form-control" placeholder="MAC Address" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Remarks</span>
+            <input type="text" id="remarks" name="remarks" class="form-control" placeholder="Remarks" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Status</span>
+            <input type="text" id="status" name="status" class="form-control" placeholder="Status" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Switch</span>
+            <input type="text" id="switch" name="switch" class="form-control" placeholder="Switch" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Timestamp</span>
+            <input type="text" id="timestamp" name="timestamp" class="form-control" placeholder="Timestamp" readonly>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" id="saveChangesBtn" >Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Structure -->
+
+
+<script>
+
+ 
+
+</script>
+
+
+
+<script>
+
+
+
+
+
+
+  function saveItem(id) {
+    const url = id ? `/items/${id}` : '/item/save'; // if id == true, /items/id else /items/save
+    const method = id ? 'PUT' : 'POST';
+
+    const data = {
+      serial_number: document.getElementById('serial_number').value,
+      location: document.getElementById('location').value,
+      brand: document.getElementById('brand').value,
+      model: document.getElementById('model').value,
+      description: document.getElementById('description').value,
+      itypes: document.getElementById('type').value,
+      macadd: document.getElementById('macadd').value,
+      remarks: document.getElementById('remarks').value,
+      status: document.getElementById('status').value,
+      switch: document.getElementById('switch').value,
+      timestamp: new Date().toISOString() // Add current timestamp in ISO format
+    };
+
+    //alert(method)
+    //alert(data['serial_number'])
+    //alert(JSON.stringify(data))
+    // Send data to the server
+    $.ajax({
+      url: url,
+      type: method,
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: () => {
+        alert('Item saved successfully');
+        location.reload(); // Optionally reload the page or refresh the item list
+      },
+      error: (error) => {
+        console.error('Error saving item:', error.responseText);
+        alert('Error saving item! Please check the console for details.');
+      }
+
+
+    });
+  }
+
+
+
+
+
+
+</script>
+
+
+<script>
+    // =========  DATATABLE  ===========================================================
+    // Initialize DataTable with JSON data from API
+    $(document).ready(function() {
+      const table = new DataTable('#example', {
+        "ajax": {
+          "url": "/items",  // Fetch data from /items endpoint
+          "dataSrc": ""     // Use a flat array directly
+        },
+        "columns": [
+          {
+            "className": 'dt-control',
+            "orderable": false,
+            "data": null,
+            "defaultContent": ''
+          },
+          { "data": "id" },
+          { "data": "serial_number" },
+          { "data": "location" },
+          { "data": "brand" },
+          { "data": "model" },
+          { "data": "description" },
+          { "data": "itypes" },
+          { "data": "macadd" },
+          { "data": "remarks" },
+          { "data": "status" },
+          { "data": "switch" }
+        ],
+        paging: false,
+        scrollCollapse: true,
+        scrollY: '400px',
+        order: [[1, 'asc']]
+      });
+
+      // Array to track the ids of the details displayed rows
+      const detailRows = [];
+
+      // Add event listener for clicking on the child row control
+      $('#example tbody').on('click', 'td.dt-control', function () {
+        const tr = $(this).closest('tr');
+        const row = table.row(tr);
+        const idx = detailRows.indexOf(tr[0].id);
+
+        if (row.child.isShown()) {
+          tr.removeClass('details');
+          row.child.hide();
+
+          // Remove from the 'open' array
+          detailRows.splice(idx, 1);
+        }
+        else {
+          tr.addClass('details');
+          row.child(format(row.data())).show();
+
+          // Add to the 'open' array
+          if (idx === -1) {
+            detailRows.push(tr[0].id);
+          }
+        }
+      });
+
+      // On each draw, loop over the detailRows array and show any child rows
+      table.on('draw', () => {
+        detailRows.forEach((id, i) => {
+          const el = document.querySelector(`#${id} td.dt-control`);
+          if (el) {
+            el.dispatchEvent(new Event('click', { bubbles: true }));
+          }
+        });
+      });
+    });
+
+function format(d) {
+  return (
+    '<table class="table table-bordered" style="width: 70%; margin: auto; font-size: 0.875rem;">' + // Smaller table width and font size
+    '<thead>' +
+      '<tr style="background-color: #800000; color: white;">' + // Header color styling
+        '<th>Serial Number</th>' +
+        '<th>Location</th>' +
+        '<th>Brand</th>' +
+        '<th>Model</th>' +
+        '<th>Description</th>' +
+        '<th>Type</th>' +
+        '<th>MAC Address</th>' +
+        '<th>Remarks</th>' +
+        '<th>Status</th>' +
+        '<th>Switch</th>' +
+        '<th>Timestamp</th>' +
+      '</tr>' +
+    '</thead>' +
+    '<tbody>' +
+      '<tr>' +
+        '<td>' + d.serial_number + '</td>' +
+        '<td>' + d.location + '</td>' +
+        '<td>' + d.brand + '</td>' +
+        '<td>' + d.model + '</td>' +
+        '<td>' + d.description + '</td>' +
+        '<td>' + d.itypes + '</td>' +
+        '<td>' + (d.macadd ? d.macadd : 'N/A') + '</td>' +
+        '<td>' + (d.remarks ? d.remarks : 'N/A') + '</td>' +
+        '<td>' + d.status + '</td>' +
+        '<td>' + d.switch + '</td>' +
+        '<td>' + d.timestamp + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td colspan="12" class="text-center">' +
+          '<button class="btn btn-primary rounded-btn" onclick="openModal(' + d.id + ', \'modify\')">Modify</button>' +
+          '<button class="btn btn-primary rounded-btn" onclick="openModal(' + d.id + ', \'clone\')">Clone</button>' +    
+          '<button class="btn btn-primary rounded-btn" onclick="openModal(' + d.id + ', \'delete\')">Delete</button>' +         
+          '<button class="btn btn-danger rounded-btn" onclick="handleButtonClick(' + d.id + ')">Delete</button>' +
+          '<button class="btn btn-info rounded-btn" onclick="handleButtonClick(' + d.id + ')">Transfer History</button>' +
+
+        '</td>' +
+      '</tr>' +
+    '</tbody>' +
+    '</table>'
+  );
+}
+
+</script>
+
+
+<script>
+function openModal(id, action) {
+    const modal = document.getElementById("itemModal");
+    modal.style.display = "block"; // Display the modal
+
+
+    console.log("ID:", id);
+    console.log("Action:", action);
+
+
+    const saveButton = document.getElementById('saveChangesBtn');
+    const modalTitle = document.getElementById('itemModalLabel');
+    const form = document.getElementById('itemForm');
+
+    const mbutton = document.getElementById("saveChangesBtn");
+
+    const modalTitle = document.getElementById("modalTitle");
+    const saveChangesBtn = document.getElementById("saveChangesBtn");
+
+    // Update modal content based on the action
+    if (action === 'modify') {
+        modalTitle.textContent = "Modify Item";
+        saveChangesBtn.textContent = "Save Changes";
+    } else if (action === 'clone') {
+        modalTitle.textContent = "Clone Item";
+        saveChangesBtn.textContent = "Create Clone";
+    }
+
+    function checkAllInputs()  {
+
+      const input02 = document.getElementById('location').value.trim();
+      const input03 = document.getElementById('brand').value.trim();
+      const input04 = document.getElementById('model').value.trim();
+      const input05 = document.getElementById('description').value.trim();
+      const input06 = document.getElementById('type').value.trim();
+      const input07 = document.getElementById('macadd').value.trim();
+      const input08 = document.getElementById('remarks').value.trim();
+      const input09 = document.getElementById('status').value.trim();
+      const input10 = document.getElementById('switch').value.trim();
+
+      const mbutton = document.getElementById("saveChangesBtn");
+
+      if (input02 && input03 && input04 && input05 && input06 && input07 && input08 && input09 && input10) {
+            // If all inputs are filled, enable the button and change its class
+            alert("ENABLED);
+            mbutton.disabled = false;
+            mbutton.classList.remove("btn-secondary");
+            mbutton.classList.add("btn-primary");
+      } else {
+            alert("DISABLED);
+            // If any input is empty, keep the button disabled and revert the class
+            mbutton.disabled = true;
+            mbutton.classList.remove("btn-primary");
+            mbutton.classList.add("btn-secondary");
+      }
+
+    }
+
+    document.querySelectorAll('#itemModal input').forEach(input => {
+        input.addEventListener('input', checkAllInputs);
+    });
+
+    // Call checkAllInputs initially to set the button state based on current input values
+    checkAllInputs();
+
+    
+    if (id) {
+      // If an ID is provided, fetch data from the endpoint and fill in the modal
+      alert("id is present")
+
+      $.ajax({
+        url: `/items/${id}`,
+        type: 'GET',
+        success: (item) => {
+          modalTitle.textContent = 'Modify Item';
+          saveButton.textContent = 'Save Changes';
+          
+          form.reset();
+
+          document.getElementById("serial-error").textContent = "";
+          // Populate modal fields
+          document.getElementById('id').value = item.id;
+          document.getElementById('serial_number').value = item.serial_number;
+          document.getElementById('location').value = item.location;
+          document.getElementById('brand').value = item.brand;
+          document.getElementById('model').value = item.model;
+          document.getElementById('description').value = item.description;
+          document.getElementById('type').value = item.itypes;
+          document.getElementById('macadd').value = item.macadd;
+          document.getElementById('remarks').value = item.remarks;
+          document.getElementById('status').value = item.status;
+          document.getElementById('switch').value = item.switch;
+          document.getElementById('timestamp').value = item.timestamp;
+
+
+          mbutton.disabled = false;
+          mbutton.classList.remove("btn-secondary");
+          mbutton.classList.add("btn-primary");
+
+
+          // Open the modal
+          const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+          myModal.show();
+        },
+        error: (error) => {
+          console.error('Error fetching item data:', error);
+        }
+      });
+    } else {
+
+      alert("new item")
+
+      mbutton.disabled = true;
+      mbutton.classList.remove("btn-primary");
+      mbutton.classList.add("btn-secondary");
+
+
+      document.getElementById("serial-error").textContent = "";
+      // If no ID is provided, open the modal with empty fields
+      modalTitle.textContent = 'Add New Item';
+      saveButton.textContent = 'Save New Item';
+
+      // Clear form fields
+      form.reset();
+
+      // Open the modal
+      const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+      myModal.show();
+    }
+
+   
+
+    // Set button click handler for saving item
+    saveButton.onclick = () => saveItem(id);
+  }
+
+
+
+
+</script>
+
+
+
+
+</body>
+</html>
