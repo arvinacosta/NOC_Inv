@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Bootstrap Table from JSON</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom striping for every two rows */
+        tbody tr:nth-child(4n+1),
+        tbody tr:nth-child(4n+2) {
+            background-color: #f2f2f2; /* Light gray for two rows */
+        }
+        tbody tr:nth-child(4n+3),
+        tbody tr:nth-child(4n+4) {
+            background-color: #ffffff; /* White for the next two rows */
+        }
+
+        /* Hover effect for active rows */
+        tbody tr.active {
+            background-color: #d1e7dd; /* Light green background on hover */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2>Dynamic Bootstrap Table from JSON Data</h2>
+    <table class="table table-bordered table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th rowspan="2" class="text-center align-middle">$50</th>
+                <th>January</th>
+                <th>$100</th>
+                <th rowspan="2" class="text-center align-middle">$50</th>
+            </tr>
+            <tr>
+                <th>February</th>
+                <th>$80</th>
+            </tr>
+        </thead>
+        <tbody id="data-body">
+            <!-- Rows will be populated here from JSON -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Example JSON data (you can replace this with your data fetching method)
+    const jsonData = {
+        "data": [
+            {
+                "January": "$1700",
+                "February": "$80",
+                "rowspan": "$50"
+            },
+            {
+                "January": "$330",
+                "February": "$80",
+                "rowspan": "$50"
+            },
+            {
+                "January": "$100",
+                "February": "$80",
+                "rowspan": "$50"
+            }
+        ]
+    };
+
+    const tbody = document.getElementById('data-body');
+
+    jsonData.data.forEach(item => {
+        const row1 = document.createElement('tr');
+        const row2 = document.createElement('tr');
+
+        // Row 1
+        const cell1 = document.createElement('td');
+        cell1.rowSpan = 2;
+        cell1.className = 'text-center align-middle';
+        cell1.innerText = item.rowspan;
+        row1.appendChild(cell1);
+
+        const cell2 = document.createElement('td');
+        cell2.innerText = "January"; // Fixed value
+        row1.appendChild(cell2);
+
+        const cell3 = document.createElement('td');
+        cell3.innerText = item.January;
+        row1.appendChild(cell3);
+
+        const cell4 = document.createElement('td');
+        cell4.rowSpan = 2;
+        cell4.className = 'text-center align-middle';
+        cell4.innerText = item.rowspan;
+        row1.appendChild(cell4);
+
+        tbody.appendChild(row1);
+
+        // Row 2
+        const cell5 = document.createElement('td');
+        cell5.innerText = "February"; // Fixed value
+        cell5.style.textIndent = "20px";
+        row2.appendChild(cell5);
+
+        const cell6 = document.createElement('td');
+        cell6.innerText = item.February;
+        row2.appendChild(cell6);
+
+        tbody.appendChild(row2);
+    });
+
+    // Row hover effect
+    document.querySelectorAll('tbody tr').forEach(row => {
+        const rowspanCell = row.querySelector('td[rowspan]');
+
+        row.addEventListener('mouseenter', () => {
+            row.classList.add('active');
+            if (rowspanCell) {
+                const nextRow = row.nextElementSibling;
+                if (nextRow) {
+                    nextRow.classList.add('active');
+                }
+            } else {
+                const prevRow = row.previousElementSibling;
+                if (prevRow) {
+                    prevRow.classList.add('active');
+                }
+            }
+        });
+
+        row.addEventListener('mouseleave', () => {
+            row.classList.remove('active');
+            if (rowspanCell) {
+                const nextRow = row.nextElementSibling;
+                if (nextRow) {
+                    nextRow.classList.remove('active');
+                }
+            } else {
+                const prevRow = row.previousElementSibling;
+                if (prevRow) {
+                    prevRow.classList.remove('active');
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Item Save</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Save Item Test</h1>
+    <p>This page allows you to submit a fixed set of data to the server for testing.</p>
+    
+    <!-- Button to trigger saveItem function -->
+    <button onclick="saveItem()">Save Item</button>
+  </div>
+
+  <script>
+    function saveItem() {
+      const data = {
+        serial_number: '123456',  // Fixed value for testing
+        location: 'Test Location',  // Fixed value for testing
+        brand: 'Test Brand',  // Fixed value for testing
+        model: 'Test Model',  // Fixed value for testing
+        description: 'Test Description',  // Fixed value for testing
+        types: 'Test Type',  // Fixed value for testing
+        macadd: '00:14:22:01:23:45',  // Fixed value for testing
+        remarks: 'Test Remarks',  // Fixed value for testing
+        status: 'Active',  // Fixed value for testing
+        switch: 'Switch 1',  // Fixed value for testing
+        timestamp: new Date().toISOString()  // Current timestamp in ISO format
+      };
+
+      // Send data to the server using AJAX POST request
+      $.ajax({
+        url: '/items/save',
+        type: 'POST', // Ensure the method is 'POST'
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: (response) => {
+            alert('Item saved successfully');
+            location.reload();
+        },
+        error: (error) => {
+            console.error('Error saving item:', error.responseText);
+            alert('Error saving item! Please check the console for details.');
+        }
+        });
+    }
+  </script>
+</body>
+</html>

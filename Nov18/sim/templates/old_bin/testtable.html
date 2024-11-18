@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bootstrap Table with Compact Two-Row Striping</title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+/* Custom striping for every two rows */
+tbody tr:nth-child(4n+1),
+tbody tr:nth-child(4n+2) {
+    background-color: #f2f2f2; /* Light gray for two rows */
+}
+tbody tr:nth-child(4n+3),
+tbody tr:nth-child(4n+4) {
+    background-color: #ffffff; /* White for the next two rows */
+}
+
+/* Hover effect for active rows */
+tbody tr.active {
+    background-color: #d1e7dd; /* Light green background on hover */
+}
+</style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2>Bootstrap Compact Table with Two-Row Striping in <code>&lt;tbody&gt;</code></h2>
+    <table class="table table-bordered table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th rowspan="2" class="text-center align-middle">$50</th>
+                <th>January</th>
+                <th>$100</th>
+                <th rowspan="2" class="text-center align-middle">$50</th>
+            </tr>
+            <tr>
+                <th>February</th>
+                <th>$80</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="2" class="text-center align-middle">$50</td>
+                <td>January</td>
+                <td>$100</td>
+                <td rowspan="2" class="text-center align-middle">$50</td>
+            </tr>
+            <tr>
+                <td style="text-indent: 20px;">February</td>
+                <td>$80</td>
+            </tr>
+
+            <tr>
+                <td rowspan="2" class="text-center align-middle">$50</td>
+                <td>January</td>
+                <td>$100</td>
+                <td rowspan="2" class="text-center align-middle">$50</td>
+            </tr>
+            <tr>
+                <td style="text-indent: 20px;">February</td>
+                <td>$80</td>
+            </tr>
+
+            <tr>
+                <td rowspan="2" class="text-center align-middle">$50</td>
+                <td>January</td>
+                <td>$100</td>
+                <td rowspan="2" class="text-center align-middle">$50</td>
+            </tr>
+            <tr>
+                <td style="text-indent: 20px;">February</td>
+                <td>$80</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.querySelectorAll('tbody tr').forEach(row => {
+    const rowspanCell = row.querySelector('td[rowspan]');
+
+    row.addEventListener('mouseenter', () => {
+        row.classList.add('active');
+        if (rowspanCell) {
+            const nextRow = row.nextElementSibling;
+            if (nextRow) {
+                nextRow.classList.add('active');
+            }
+        } else {
+            const prevRow = row.previousElementSibling;
+            if (prevRow) {
+                prevRow.classList.add('active');
+            }
+        }
+    });
+
+    row.addEventListener('mouseleave', () => {
+        row.classList.remove('active');
+        if (rowspanCell) {
+            const nextRow = row.nextElementSibling;
+            if (nextRow) {
+                nextRow.classList.remove('active');
+            }
+        } else {
+            const prevRow = row.previousElementSibling;
+            if (prevRow) {
+                prevRow.classList.remove('active');
+            }
+        }
+    });
+});
+</script>
+
+</body>
+</html>

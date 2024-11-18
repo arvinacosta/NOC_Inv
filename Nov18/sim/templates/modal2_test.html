@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataTables with API Data</title>
+
+    <!-- Bootstrap CSS -->
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" >
+  
+  
+      <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  
+  
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+
+
+    
+    
+
+</head>
+<body>
+<style>
+    .input-group-text {
+        width: 110px;
+        font-size: 0.875rem;
+        text-align: left;
+        display: inline-block;
+    }
+
+    .input-group .form-control,
+    .input-group .form-select {
+        border: 1px solid #495057;
+        border-radius: .2rem;
+    }
+
+    .input-group .form-control:focus,
+    .input-group .form-select:focus {
+        border-color: #343a40;
+        box-shadow: none;
+    }
+</style>
+
+
+<div class="container my-5">
+    <div class="toolbar">
+    <button class="btn btn-primary rounded-btn" onclick="openModal(null, 'new')">Add New</button>
+  </div>
+
+    <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="entryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="entryModalLabel">Asset Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+    
+                <div class="modal-body">
+                    <!-- Form for asset entry -->
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">ID</span>
+                        <input type="text" id="id" name="id" class="form-control" placeholder="ID" readonly>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Serial Number</span>
+                        <input type="text" id="serialNumber" name="serialNumber" class="form-control" placeholder="Serial Number" required>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Location</span>
+                        <input type="text" id="location" name="location" class="form-control" placeholder="Location" required>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Brand</span>
+                        <input type="text" id="brand" name="brand" class="form-control" placeholder="Brand" required>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Model</span>
+                        <input type="text" id="model" name="model" class="form-control" placeholder="Model" required>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Description</span>
+                        <input type="text" id="description" name="description" class="form-control" placeholder="Description" required>
+                    </div>
+
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Type</span>
+                        <select id="itypes" name="itypes" class="form-control form-control-sm" required>
+                            <option value="" disabled selected>Select Type</option>
+                            <option value="Type1">Type1</option>
+                            <option value="Type2">Type2</option>
+                        </select>
+                    </div>
+
+
+
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">MAC Address</span>
+                        <input type="text" id="macadd" name="macadd" class="form-control" placeholder="MAC Address" required>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Remarks</span>
+                        <input type="text" id="remarks" name="remarks" class="form-control" placeholder="Remarks">
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Status</span>
+                        <select id="status" name="status" class="form-control form-control-sm" required>
+                            <option value="" disabled selected>Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+
+
+
+
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Switch</span>
+                        <div class="d-flex ms-auto">
+                            <div class="form-check form-switch ms-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="switchONOFF" name="switch" value="1" checked>
+                                <label class="form-check-label" for="switchONOFF" id="switchLabel">Enable</label>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Timestamp</span>
+                        <input type="text" id="timestamp" name="timestamp" class="form-control" placeholder="Timestamp" readonly>
+                    </div>
+                </div>
+    
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveData()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    document.getElementById('switchONOFF').addEventListener('change', function() {
+        const label = document.getElementById('switchLabel');
+        if (this.checked) {
+            label.textContent = 'Enable';
+            this.value = '1';
+        } else {
+            label.textContent = 'Disable';
+            this.value = '0';
+        }
+    });
+</script>
+
+<script>
+
+
+
+function openModalX(id, action) {
+    const saveButton = document.getElementById('saveChangesBtn');
+    saveButton.onclick = () => saveItem(id, action); // Set save button action
+
+    // Determine URL and request type based on action
+    if (!id && action === "new") {
+        // Create a new item
+        openNewItemModal();
+    } else if (id && action === "modify") {
+        // Modify existing item
+        fetchItemData(id, populateModalAndShow);
+    } else if (id && action === "clone") {
+        // Clone existing item
+        fetchItemData(id, populateModalForCloneAndShow);
+    } else if (id && action === "delete") {
+        // Show confirmation modal before deletion
+        showDeleteConfirmation(id);
+    } else {
+        console.error("Invalid action or ID");
+    }
+}
+
+//========================================================
+function openModal(id, action) {
+    // Clear all fields for a new item
+    if (!id && action === "new") {
+        populateModalFields({});
+        const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+        myModal.show();
+    } else {
+        console.error("Invalid action or ID for 'Add New'.");
+    }
+}
+
+    // Function to open a new item modal without fetching data
+function openNewItemModal() {
+    populateModalFields({}); // Clear fields for new item
+    const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    myModal.show();
+}
+
+</script>
+
+
+<script>
+    function saveData() {
+        const data = {
+            serialNumber: document.getElementById('serialNumber').value,
+            location: document.getElementById('location').value,
+            brand: document.getElementById('brand').value,
+            model: document.getElementById('model').value,
+            description: document.getElementById('description').value,
+            itypes: document.getElementById('itypes').value,
+            macadd: document.getElementById('macadd').value,
+            remarks: document.getElementById('remarks').value,
+            status: document.getElementById('status').value,
+            switch: document.querySelector('input[name="switch"]:checked')?.value || ''
+        };
+        console.log("Data saved:", data);
+        alert("Data: " + JSON.stringify(data, null, 2));
+    }
+</script>
+</body>
+</html>

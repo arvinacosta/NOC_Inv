@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Row Options Popup</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa; /* Light background for contrast */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr.active {
+            background-color: #d1e7dd; /* Highlighted row color */
+        }
+        .popup {
+            display: none; /* Hidden by default */
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2); /* More transparent for frozen glass effect */
+            border-radius: 8px; /* Rounded edges */
+            padding: 10px;
+            backdrop-filter: blur(12px) brightness(0.9); /* Enhanced blur and brightness for frozen effect */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            min-width: 150px; /* Minimum width for the popup */
+        }
+        .options-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 20px; /* Increase font size for visibility */
+            color: #007bff; /* Button color */
+            transition: color 0.3s;
+            display: flex; /* Flexbox for horizontal alignment */
+            align-items: center; /* Center items vertically */
+        }
+        .options-btn:hover {
+            color: #0056b3; /* Darker color on hover */
+        }
+        .popup button {
+            margin: 5px 0; /* Vertical alignment */
+            width: 100%; /* Full width buttons */
+            background-color: transparent; /* Transparent background */
+            color: inherit; /* Inherit text color */
+            border: 1px solid transparent; /* No border by default */
+            border-radius: 5px; /* Rounded button edges */
+            padding: 8px; /* Button padding */
+            cursor: pointer; /* Pointer cursor on hover */
+            display: flex; /* Flexbox for icon and text */
+            align-items: center; /* Center items vertically */
+            transition: background-color 0.3s, border-color 0.3s; /* Transition for hover effect */
+        }
+        .popup button:hover {
+            background-color: rgba(0, 123, 255, 0.1); /* Light background on hover */
+            border-color: #007bff; /* Border color on hover */
+        }
+        .popup button i {
+            margin-right: 5px; /* Space between icon and text */
+        }
+    </style>
+</head>
+<body>
+
+    <table id="myTable">
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr data-id="1">
+                <td><input type="checkbox" class="row-select"></td>
+                <td>Item 1</td>
+                <td>
+                    <button class="options-btn">⋮</button>
+                    <div class="popup">
+                        <button class="shareBtn"><i class="bi bi-share"></i>Share</button>
+                        <button class="renameBtn"><i class="bi bi-pencil"></i>Rename</button>
+                        <button class="deleteBtn"><i class="bi bi-trash"></i>Delete</button>
+                    </div>
+                </td>
+            </tr>
+            <tr data-id="2">
+                <td><input type="checkbox" class="row-select"></td>
+                <td>Item 2</td>
+                <td>
+                    <button class="options-btn">⋮</button>
+                    <div class="popup">
+                        <button class="shareBtn"><i class="bi bi-share"></i>Share</button>
+                        <button class="renameBtn"><i class="bi bi-pencil"></i>Rename</button>
+                        <button class="deleteBtn"><i class="bi bi-trash"></i>Delete</button>
+                    </div>
+                </td>
+            </tr>
+            <tr data-id="3">
+                <td><input type="checkbox" class="row-select"></td>
+                <td>Item 3</td>
+                <td>
+                    <button class="options-btn">⋮</button>
+                    <div class="popup">
+                        <button class="shareBtn"><i class="bi bi-share"></i>Share</button>
+                        <button class="renameBtn"><i class="bi bi-pencil"></i>Rename</button>
+                        <button class="deleteBtn"><i class="bi bi-trash"></i>Delete</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        let selectedRow = null;
+
+        document.querySelectorAll('.options-btn').forEach(btn => {
+            btn.addEventListener('click', function(event) {
+                const row = event.target.closest('tr');
+                const popup = row.querySelector('.popup');
+
+                // Clear previous selection
+                if (selectedRow && selectedRow !== row) {
+                    selectedRow.classList.remove('active');
+                    selectedRow.querySelector('.popup').style.display = 'none'; // Hide previous popup
+                }
+
+                // Set new selection
+                selectedRow = row;
+                selectedRow.classList.add('active');
+
+                // Position the popup next to the Options button
+                const rect = event.target.getBoundingClientRect();
+                popup.style.display = 'block';
+                popup.style.left = `${rect.right + window.scrollX}px`;
+                popup.style.top = `${rect.top + window.scrollY}px`;
+            });
+        });
+
+        // Hide popup when clicking outside
+        window.onclick = function(event) {
+            if (selectedRow && !selectedRow.contains(event.target)) {
+                selectedRow.classList.remove('active');
+                selectedRow.querySelector('.popup').style.display = 'none'; // Hide popup
+                selectedRow = null; // Reset selectedRow
+            }
+        }
+
+        document.querySelectorAll(".shareBtn").forEach(btn => {
+            btn.onclick = async function(event) {
+                const row = event.target.closest('tr');
+                const name = row.cells[1].innerText;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+                alert(`Sharing ${name}`);
+                hidePopup(row);
+            }
+        });
+
+        document.querySelectorAll(".renameBtn").forEach(btn => {
+            btn.onclick = async function(event) {
+                const row = event.target.closest('tr');
+                const nameCell = row.cells[1];
+                const newName = prompt('Enter new name:', nameCell.innerText);
+                if (newName) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+                    nameCell.innerText = newName;
+                }
+                hidePopup(row);
+            }
+        });
+
+        document.querySelectorAll(".deleteBtn").forEach(btn => {
+            btn.onclick = async function(event) {
+                const row = event.target.closest('tr');
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+                row.remove();
+                hidePopup(row);
+                selectedRow = null; // Reset selectedRow if the active row is deleted
+            }
+        });
+
+        function hidePopup(row) {
+            const popup = row.querySelector('.popup');
+            popup.style.display = 'none'; // Hide popup
+            row.classList.remove('active'); // Remove active class
+        }
+    </script>
+
+</body>
+</html>

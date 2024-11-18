@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Data PDF Report Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .report-container {
+            max-width: 95%;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #preview {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="form-group">
+            <input type="text" id="apiUrl" placeholder="Enter API URL" style="width: 300px; padding: 5px;">
+            <button onclick="fetchData()">Fetch Data</button>
+            <button onclick="generatePDF()">Generate PDF</button>
+        </div>
+        <div id="preview"></div>
+    </div>
+
+    <script>
+        const headers = [
+            "ID", "Serial Number", "Location", "Brand", "Model", 
+            "Description", "Type", "MAC Address", "Remarks", 
+            "Status", "Switch", "Timestamp"
+        ];
+
+        let apiData = [];
+
+        async function fetchData() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                apiData = await response.json();
+                displayPreview(apiData);
+            } catch (error) {
+                alert('Error fetching data: ' + error.message);
+            }
+        }
+
+        function displayPreview(data) {
+            const preview = document.getElementById('preview');
+            
+            // Create table HTML
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            ${headers.map(header => `<th>${header}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Add data rows
+            data.forEach(item => {
+                tableHtml += `
+                    <tr>
+                        ${headers.map(header => {
+                            const key = header.toLowerCase().replace(/ /g, '_');
+                            return `<td>${item[key] || ''}</td>`;
+                        }).join('')}
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table>';
+            preview.innerHTML = tableHtml;
+        }
+
+        function generatePDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('l', 'pt', 'a4'); // Landscape orientation
+
+                // Add title
+                doc.setFontSize(16);
+                const title = 'Equipment Inventory Report';
+                doc.text(title, 40, 40);
+
+                // Add timestamp
+                doc.setFontSize(10);
+                const timestamp = `Generated on: ${new Date().toLocaleString()}`;
+                doc.text(timestamp, 40, 60);
+
+                // Generate table
+                doc.autoTable({
+                    startY: 70,
+                    head: [headers],
+                    body: apiData.map(item => 
+                        headers.map(header => {
+                            const key = header.toLowerCase().replace(/ /g, '_');
+                            return item[key] || '';
+                        })
+                    ),
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2
+                    },
+                    headStyles: {
+                        fillColor: [51, 122, 183],
+                        textColor: 255
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 30 }, // ID
+                        1: { cellWidth: 60 }, // Serial Number
+                        2: { cellWidth: 60 }, // Location
+                        3: { cellWidth: 50 }, // Brand
+                        4: { cellWidth: 50 }, // Model
+                        5: { cellWidth: 70 }, // Description
+                        6: { cellWidth: 40 }, // Type
+                        7: { cellWidth: 70 }, // MAC Address
+                        8: { cellWidth: 60 }, // Remarks
+                        9: { cellWidth: 40 }, // Status
+                        10: { cellWidth: 40 }, // Switch
+                        11: { cellWidth: 70 }  // Timestamp
+                    },
+                    theme: 'grid'
+                });
+
+                // Save the PDF
+                doc.save('inventory_report.pdf');
+                
+            } catch (error) {
+                alert('Error generating PDF: ' + error.message);
+            }
+        }
+
+        // For testing without API
+        function loadSampleData() {
+            apiData = [
+                {
+                    id: "1",
+                    serial_number: "SN001",
+                    location: "Server Room A",
+                    brand: "Cisco",
+                    model: "C9300-48P",
+                    description: "48-port PoE Switch",
+                    type: "Switch",
+                    mac_address: "00:1B:44:11:3A:B7",
+                    remarks: "Primary switch",
+                    status: "Active",
+                    switch: "SW01",
+                    timestamp: "2024-11-07 10:00:00"
+                }
+                // Add more sample data as needed
+            ];
+            displayPreview(apiData);
+        }
+    </script>
+</body>
+</html>

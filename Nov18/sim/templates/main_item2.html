@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataTables with API Data</title>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <style>
+    /* Highlight the row on hover */
+    #daTable tbody tr:hover {
+      background-color: #f0f8ff; /* Light blue background */
+      cursor: pointer;
+    }
+    /* Style for the child row */
+    tr.details td.dt-control {
+      background: url('https://cdn.datatables.net/1.11.5/images/details_open.png') no-repeat center center;
+      cursor: pointer;
+    }
+    .rounded-btn {
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+
+    <div class="table-responsive">
+
+      <div class="toolbar">
+        <button class="btn btn-primary rounded-btn" onclick="openModal(null, 'new')">Add New</button>
+      </div>
+
+      <table id="daTable" class="table table-striped table-bordered table-sm">
+        <thead>
+          <tr style="background-color: #007bff; color: white;">
+            <th></th>
+            <th>ID</th>
+            <th>Serial Number</th>
+            <th>Location</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>MAC Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically populated here -->
+        </tbody>
+      </table><!-- Table Structure -->
+
+    </div><!-- class="table-responsive" -->
+  </div><!-- class="container my-5" -->
+
+  <script>
+    // Initialize DataTable with JSON data from API ===========================================
+    $(document).ready(function() {
+      const table = new DataTable('#daTable', {
+        ajax: {
+          url: "/items",  // Fetch data from /items endpoint
+          dataSrc: ""     // Use a flat array directly
+        },
+        columns: [
+          { className: 'dt-control', orderable: false, data: null, defaultContent: '' },
+          { data: "id" },
+          { data: "serial_number" },
+          { data: "location" },
+          { data: "description" },
+          { data: "itypes" },
+          { data: "macadd" }
+
+        ],
+        paging: false,
+        scrollCollapse: true,
+        scrollY: '400px',
+        order: [[1, 'asc']]
+      });
+
+      const detailRows = [];
+      $('#daTable tbody').on('click', 'td.dt-control', function () {
+        const tr = $(this).closest('tr');
+        const row = table.row(tr);
+        const idx = detailRows.indexOf(tr[0].id);
+
+        if (row.child.isShown()) {
+          tr.removeClass('details');
+          row.child.hide();
+          detailRows.splice(idx, 1);
+        } else {
+          tr.addClass('details');
+          row.child(format(row.data())).show();
+          if (idx === -1) detailRows.push(tr[0].id);
+        }
+      });
+
+      table.on('draw', () => {
+        detailRows.forEach(id => {
+          const el = document.querySelector(`#${id} td.dt-control`);
+          if (el) el.dispatchEvent(new Event('click', { bubbles: true }));
+        });
+      });
+    });
+
+    function format(d) {
+      return `
+        <div class="container" style="background-color:beige">
+          <table class="table table-bordered" style="width: 70%; margin: auto; font-size: 0.875rem;">
+            <thead>
+              <tr style="background-color: #800000; color: white;">
+                <th>Actions</th>
+                <th>Serial Number</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Remarks</th>
+                <th>Status</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="display: flex; gap: 15px;">
+                    <i class="bi bi-file-earmark-plus icon-large" style="font-size: 1.6rem;" onclick="openModal(null, 'new')" data-bs-toggle="tooltip" title="Create New"></i>
+                    <i class="bi bi-pencil-square icon-large" style="font-size: 1.6rem;" onclick="openModal(${d.id}, 'modify')" data-bs-toggle="tooltip" title="Modify"></i>
+                    <i class="bi bi-copy icon-large" style="font-size: 1.6rem;" onclick="openModal(${d.id}, 'clone')" data-bs-toggle="tooltip" title="Clone"></i>
+                    <i class="bi bi-trash3 icon-large" style="font-size: 1.6rem;" onclick="openModal(${d.id}, 'delete')" data-bs-toggle="tooltip" title="Delete"></i>
+                  </div>
+                </td>
+                <td>${d.serial_number || 'N/A'}</td>
+
+                <td>${d.brand || 'N/A'}</td>
+                <td>${d.model || 'N/A'}</td>
+
+                <td>${d.remarks || 'N/A'}</td>
+                <td>${d.status || 'N/A'}</td>
+                <td>${d.timestamp || 'N/A'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>`;
+    }
+  </script><!-- DataTable Script -->
+
+</body>
+</html>

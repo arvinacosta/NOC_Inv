@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataTables with API Data</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+  <!-- Include Bootstrap CSS (for styles) -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Include Bootstrap JS (for modal functionality) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+   
+
+<!-- First jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Then Popper.js (required for Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+
+<!-- Then Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+
+  <style>
+    /* Highlight the row on hover */
+    #example tbody tr:hover {
+      background-color: #f0f8ff;  /* Light blue background */
+      cursor: pointer;            /* Changes the cursor to a pointer */
+    }
+    /* Style for the child row */
+    tr.details td.dt-control {
+      background: url('https://cdn.datatables.net/1.11.5/images/details_open.png') no-repeat center center;
+      cursor: pointer;
+    }
+    tr.details td.dt-control::before {
+      content: "";
+    }
+
+
+
+    .rounded-btn {
+        border-radius: 20px; /* Adjust the value as needed */
+        margin-right: 10px;
+    }
+
+
+
+
+/* Basic modal styles */
+.delmodal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4); /* Black background with transparency */
+}
+
+.delmodal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    min-height: 100px;
+    border: 1px solid #888;
+    width: 80%;
+    z-index: 1050; /* Make sure this is high enough */
+}
+
+.delmodal-footer {
+    padding: 10px;
+    background-color: #f1f1f1;  /* Add a background to distinguish it */
+    text-align: right;
+    z-index: 1060;  /* Ensure footer is above other modal content */
+}
+
+.delmodal-footer .btn {
+    margin: 0 10px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+
+    <!-- Table Structure -->
+    <div class="table-responsive">
+
+      <div class="toolbar">
+        <button class="btn btn-primary rounded-btn" onclick="openModal(null, 'new')">Add New</button>
+      </div>
+      
+
+
+      <table id="example" class="table table-striped table-bordered table-sm">
+        <thead>
+          <tr style="background-color: #007bff; color: white;">
+            <th></th>
+            <th>ID</th>
+            <th>Serial Number</th>
+            <th>Location</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>MAC Address</th>
+            <th>Remarks</th>
+            <th>Status</th>
+            <th>Switch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically populated here -->
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+
+<!-- Modal Structure +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="itemModalLabel">Common Header Label</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Form to modify item -->
+        <form id="itemForm">
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">ID</span>
+            <input type="text" id="id" name="id" class="form-control" placeholder="ID" readonly>
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Serial Number</span>
+            <input type="text" id="serial_number" name="serial_number" class="form-control" placeholder="Serial Number" oninput="checkDuplicateSerialNumber()">
+            <div id="serial-error"></div>
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Location</span>
+            <input type="text" id="location" name="location" class="form-control" placeholder="Location" required oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Brand</span>
+            <input type="text" id="brand" name="brand" class="form-control" placeholder="Brand" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Model</span>
+            <input type="text" id="model" name="model" class="form-control" placeholder="Model" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Description</span>
+            <input type="text" id="description" name="description" class="form-control" placeholder="Description" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Type</span>
+            <input type="text" id="itypes" name="itypes" class="form-control" placeholder="Type" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">MAC Address</span>
+            <input type="text" id="macadd" name="macadd" class="form-control" placeholder="MAC Address" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Remarks</span>
+            <input type="text" id="remarks" name="remarks" class="form-control" placeholder="Remarks" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Status</span>
+            <input type="text" id="status" name="status" class="form-control" placeholder="Status" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Switch</span>
+            <input type="text" id="switch" name="switch" class="form-control" placeholder="Switch" oninput="checkAllInputs()">
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" style="width: 110px;">Timestamp</span>
+            <input type="text" id="timestamp" name="timestamp" class="form-control" placeholder="Timestamp" readonly>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" id="saveChangesBtn">CommonButton</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Structure +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmationModal" class="delmodal" tabindex="-1" aria-hidden="true">
+  <div class="delmodal-content">
+      <h4>Confirm Deletion</h4>
+      <p>Are you sure you want to delete this record? This action cannot be undone.</p>
+  </div>
+  <div class="delmodal-footer">
+
+      <button id="confirmDeleteBtn" class="delmodal-close btn red">Delete</button>
+      <button id="cancelDeleteBtn" class="delmodal-close btn " >Cancel</button>
+
+
+  </div>
+</div>
+<!-- Delete Confirmation Modal -->
+
+
+
+<script>
+
+// Main function to open modal based on action
+function openModal(id, action) {
+    const saveButton = document.getElementById('saveChangesBtn');
+    saveButton.onclick = () => saveItem(id, action); // Set save button action
+
+    // Determine URL and request type based on action
+    if (!id && action === "new") {
+        // Create a new item
+        openNewItemModal();
+    } else if (id && action === "modify") {
+        // Modify existing item
+        fetchItemData(id, populateModalAndShow);
+    } else if (id && action === "clone") {
+        // Clone existing item
+        fetchItemData(id, populateModalForCloneAndShow);
+    } else if (id && action === "delete") {
+        // Show confirmation modal before deletion
+        showDeleteConfirmation(id);
+    } else {
+        console.error("Invalid action or ID");
+    }
+}
+
+
+// Function to show confirmation modal before deletion
+function showDeleteConfirmation(id) {
+    const delmodal = document.getElementById('deleteConfirmationModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+
+    // Show the modal
+    delmodal.style.display = 'block';
+    
+    // When the user clicks on the "Delete" button in the modal
+    confirmDeleteBtn.onclick = function() {
+        deleteItem(id);
+        delmodal.style.display = 'none'; // Close the modal
+    };
+    
+    // If the user clicks "Cancel", just close the modal
+    cancelDeleteBtn.onclick = function() {
+        delmodal.style.display = 'none'; // Close the modal
+    };
+}
+
+
+// Function to fetch item data
+function fetchItemData(id, onSuccess) {
+    $.ajax({
+        url: `/items/${id}`,
+        type: 'GET',
+        success: (item) => {
+            console.log('Received item:', item);
+            onSuccess(item);
+        },
+        error: (error) => {
+            console.error('Error fetching item data:', error);
+        }
+    });
+}
+
+// Function to populate modal fields and show modal for modify or clone
+function populateModalAndShow(item) {
+    populateModalFields(item);
+    const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    myModal.show();
+}
+
+function populateModalForCloneAndShow(item) {
+    populateModalFields(item);
+    document.getElementById('id').value = ''; // Clear ID for clone
+    document.getElementById('serial_number').value = ''; // Clear serial number
+    document.getElementById('timestamp').value = ''; // Clear timestamp
+    const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    myModal.show();
+}
+
+// Function to open a new item modal without fetching data
+function openNewItemModal() {
+    populateModalFields({}); // Clear fields for new item
+    const myModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    myModal.show();
+}
+
+
+// Function to delete an item
+function deleteItem(id) {
+    $.ajax({
+        url: `/items/delete/${id}`,
+        type: 'DELETE',
+        success: () => {
+            alert("Item deleted successfully- func deleteItem()");
+            location.reload();
+        },
+        error: (error) => {
+            console.error('Error deleting item:', error);
+        }
+    });
+}
+
+// Function to save, clone, modify, or delete item data
+function saveItem(id, action) {
+    let url;
+    let method;
+
+    // Determine the HTTP method and URL based on action
+
+    if (action === "new") {
+        url = '/item/save';
+        method = "POST"; // Create a completely new item
+
+    } else if (action === "modify") {
+        url = `/items/${id}`;
+        method = "PUT"; // Update existing item
+
+    } else if (action === "clone") {
+        url = '/item/save';
+        method = "POST"; // Create a new item with copied data
+  
+    } else {
+        console.error("Invalid action");
+        return;
+    }
+
+    // Collect item data only if not deleting
+    const data =  {
+        serial_number: document.getElementById('serial_number').value,
+        location: document.getElementById('location').value,
+        brand: document.getElementById('brand').value,
+        model: document.getElementById('model').value,
+        description: document.getElementById('description').value,
+        itypes: document.getElementById('itypes').value,
+        macadd: document.getElementById('macadd').value,
+        remarks: document.getElementById('remarks').value,
+        status: document.getElementById('status').value,
+        //switch: document.getElementById('switch').value,
+        switch: document.querySelector('input[name="switch"]:checked')?.value || null, // Get selected radio value or null if none is selected
+        timestamp: new Date().toISOString() // Add current timestamp in ISO format
+    };
+
+    // Configure the AJAX request
+   
+    $.ajax({
+        url: url,
+        type: method,
+        contentType: 'application/json',
+        data: data ? JSON.stringify(data) : null, // Send data if available
+        success: () => {
+            
+            alert("Successfully Processing Action : " + action);
+            location.reload(); // Optionally reload the page or refresh the item list
+        },
+        error: (error) => {
+            console.error(`Error ${action} item:`, error.responseText);
+            alert(`Error ${action} item! Please check the console for details.`);
+        }
+    });
+    
+}
+
+// Function to populate modal fields - Adjust according to field names in your modal
+function populateModalFields(item) {
+    document.getElementById('serial_number').value = item.serial_number || '';
+    document.getElementById('location').value = item.location || '';
+    document.getElementById('brand').value = item.brand || '';
+    document.getElementById('model').value = item.model || '';
+    document.getElementById('description').value = item.description || '';
+    document.getElementById('itypes').value = item.itypes || '';
+    document.getElementById('macadd').value = item.macadd || '';
+    document.getElementById('remarks').value = item.remarks || '';
+    document.getElementById('status').value = item.status || '';
+    document.getElementById('switch').value = item.switch || '';
+}
+
+
+
+  // Initialize DataTable with JSON data from API ================================================
+  $(document).ready(function() {
+      const table = new DataTable('#example', {
+        "ajax": {
+          "url": "/items",  // Fetch data from /items endpoint
+          "dataSrc": ""     // Use a flat array directly
+        },
+        "columns": [
+          {
+            "className": 'dt-control',
+            "orderable": false,
+            "data": null,
+            "defaultContent": ''
+          },
+          { "data": "id" },
+          { "data": "serial_number" },
+          { "data": "location" },
+          { "data": "brand" },
+          { "data": "model" },
+          { "data": "description" },
+          { "data": "itypes" },
+          { "data": "macadd" },
+          { "data": "remarks" },
+          { "data": "status" },
+          { "data": "switch" }
+        ],
+        paging: false,
+        scrollCollapse: true,
+        scrollY: '400px',
+        order: [[1, 'asc']]
+      });
+
+      // Array to track the ids of the details displayed rows
+      const detailRows = [];
+
+      // Add event listener for clicking on the child row control
+      $('#example tbody').on('click', 'td.dt-control', function () {
+        const tr = $(this).closest('tr');
+        const row = table.row(tr);
+        const idx = detailRows.indexOf(tr[0].id);
+
+        if (row.child.isShown()) {
+          tr.removeClass('details');
+          row.child.hide();
+
+          // Remove from the 'open' array
+          detailRows.splice(idx, 1);
+        }
+        else {
+          tr.addClass('details');
+          row.child(format(row.data())).show();
+
+          // Add to the 'open' array
+          if (idx === -1) {
+            detailRows.push(tr[0].id);
+          }
+        }
+      });
+
+      // On each draw, loop over the detailRows array and show any child rows
+      table.on('draw', () => {
+        detailRows.forEach((id, i) => {
+          const el = document.querySelector(`#${id} td.dt-control`);
+          if (el) {
+            el.dispatchEvent(new Event('click', { bubbles: true }));
+          }
+        });
+      });
+    });
+
+  function format(d) {
+  return (
+    '<div class="container" style="background-color:beige ">' +
+    '<table class="table table-bordered" style="width: 70%; margin: auto; font-size: 0.875rem;">' + // Smaller table width and font size
+    '<thead>' +
+      '<tr style="background-color: #800000; color: white;">' + // Header color styling
+        '<th>Actions</th>' +
+        '<th>Serial Number</th>' +
+        '<th>Location</th>' +
+        '<th>Brand</th>' +
+        '<th>Model</th>' +
+        '<th>Description</th>' +
+        '<th>Type</th>' +
+        '<th>MAC Address</th>' +
+        '<th>Remarks</th>' +
+        '<th>Status</th>' +
+        '<th>Timestamp</th>' +
+      '</tr>' +
+    '</thead>' +
+    '<tbody>' +
+      '<tr>' +
+        '<td>' +
+          '<div style="display: flex; gap: 15px;">' +
+            
+            '<i class="bi bi-file-earmark-plus icon-large" style="font-size: 1.6rem; margin-right: 18px;" '+
+            'onclick="openModal(null, \'new\')" data-bs-toggle="tooltip" title="Create New"></i>' +
+
+            '<i class="bi bi-pencil-square icon-large" style="font-size: 1.6rem; margin-right: 18px;" '+
+            'onclick="openModal(' + d.id + ', \'modify\')" data-bs-toggle="tooltip" title="Modify"></i>' +
+
+            '<i class="bi bi-copy   icon-large" style="font-size: 1.6rem; margin-right: 18px;" '+
+            'onclick="openModal(' + d.id + ', \'clone\')"  data-bs-toggle="tooltip" title="Clone"></i>' +
+            
+            '<i class="bi bi-trash3 icon-large" style="font-size: 1.6rem; margin-right: 18px;" '+
+            'onclick="openModal(' + d.id + ', \'delete\')" data-bs-toggle="tooltip" title="Delete"></button> </i> ' +
+
+          '</div>' +
+        '</td>' +
+
+        '<td>' + d.serial_number + '</td>' +
+        '<td>' + d.location + '</td>' +
+        '<td>' + d.brand + '</td>' +
+        '<td>' + d.model + '</td>' +
+        '<td>' + d.description + '</td>' +
+        '<td>' + d.itypes + '</td>' +
+        '<td>' + (d.macadd ? d.macadd : 'N/A') + '</td>' +
+        '<td>' + (d.remarks ? d.remarks : 'N/A') + '</td>' +
+        '<td>' + d.status + '</td>' +
+        '<td>' + d.timestamp + '</td>' +
+
+      '</tr>' +
+      '</tbody>' +
+      '</table>' +
+
+
+
+
+
+
+
+    '</div>;'
+  );
+}
+
+
+
+  </script>
+</body>
+</html>
